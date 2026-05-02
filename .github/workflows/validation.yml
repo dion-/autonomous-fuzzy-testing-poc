@@ -115,6 +115,14 @@ jobs:
           pnpm exec vite preview --port 4173 --host &
           npx wait-on http://localhost:4173
 
+      - name: Install Chromium
+        run: |
+          npx -y playwright install chromium
+          CHROME_PATH="$(find ~/.cache/ms-playwright -name chrome -type f | head -1)"
+          sudo ln -sf "$CHROME_PATH" /usr/bin/google-chrome-stable
+          echo "Using Chromium at $CHROME_PATH"
+        shell: bash
+
       - name: Run Bombadil
         run: |
           npx bombadil test http://localhost:4173 \
