@@ -1,0 +1,80 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "style": "error",
+    "restriction": "error",
+    "nursery": "error"
+  },
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import",
+    "jsdoc",
+    "jest",
+    "vitest",
+    "jsx-a11y",
+    "nextjs",
+    "react-perf",
+    "promise",
+    "node",
+    "react"
+  ],
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.0"
+    }
+  },
+  "options": {
+    "denyWarnings": true,
+    "maxWarnings": 0
+  },
+  "rules": {
+    "react-in-jsx-scope": "off",
+    "jsx-filename-extension": "off",
+    "func-style": "off",
+    "explicit-function-return-type": "off",
+    "explicit-module-boundary-types": "off",
+    "no-named-export": "off",
+    "prefer-default-export": "off",
+    "no-relative-parent-imports": "off",
+    "id-length": "off",
+    "no-magic-numbers": "off",
+    "no-ternary": "off",
+    "max-lines-per-function": "off",
+    "max-statements": "off",
+    "jsx-max-depth": "off",
+    "jsx-no-new-function-as-prop": "off",
+    "filename-case": "off",
+    "sort-imports": "off",
+    "sort-keys": "off",
+    "no-null": "off",
+    "curly": "off",
+    "capitalized-comments": "off",
+    "no-zero-fractions": "off",
+    "switch-case-braces": "off",
+    "group-exports": "off",
+    "no-rest-spread-properties": "off",
+    "prefer-query-selector": "off",
+    "no-non-null-assertion": "off",
+    "require-hook": "off",
+    "no-undefined": "off",
+    "no-duplicate-imports": "off",
+    "no-default-export": "off",
+    "exports-last": "off"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    "*.min.js"
+  ]
+}

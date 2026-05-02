@@ -1,0 +1,127 @@
+name: Fuzzy Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches-ignore:
+      - 'auto-fix/**'
+
+env:
+  BOMBADIL_TIME_LIMIT: ${{ vars.BOMBADIL_TIME_LIMIT || '2m' }}
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (oxlint)
+        run: pnpm run lint:ci
+
+      - name: Typecheck (tsc)
+        run: pnpm run typecheck
+
+  bombadil:
+    name: Bombadil Fuzzy Test
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build app
+        run: pnpm run build
+
+      - name: Start preview server
+        run: |
+          pnpm run preview -- --port 4173 --host &
+          npx wait-on http://localhost:4173
+
+      - name: Run Bombadil
+        run: |
+          npx bombadil test http://localhost:4173 \
+            --headless \
+            --no-sandbox \
+            --exit-on-violation \
+            --time-limit "$BOMBADIL_TIME_LIMIT" \
+            --output-path ./bombadil-results
+        shell: bash
+
+      - name: Upload Bombadil results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bombadil-results
+          path: bombadil-results/
+
+      - name: Parse Bombadil trace
+        if: failure()
+        id: parse
+        run: |
+          echo '## Bombadil Fuzzy Test Failure' > bombadil-comment.md
+          echo '' >> bombadil-comment.md
+          echo 'Bombadil detected property violations during fuzzy testing.' >> bombadil-comment.md
+          echo '' >> bombadil-comment.md
+          echo '### Violations' >> bombadil-comment.md
+          echo '' >> bombadil-comment.md
+          if [ -f bombadil-results/trace.jsonl ]; then
+            jq -r 'select(.violation != null) | "- **\(.property)**: \(.violation.message // "Property violated")"' bombadil-results/trace.jsonl | head -20 >> bombadil-comment.md
+          else
+            echo '- Unable to parse trace. See uploaded artifact for details.' >> bombadil-comment.md
+          fi
+          echo '' >> bombadil-comment.md
+          echo '### Action Sequence' >> bombadil-comment.md
+          echo '' >> bombadil-comment.md
+          echo 'See the uploaded artifact `bombadil-results` for the full trace, screenshots, and state transitions.' >> bombadil-comment.md
+          echo '' >> bombadil-comment.md
+          echo 'You can inspect locally with:' >> bombadil-comment.md
+          echo '```bash' >> bombadil-comment.md
+          echo 'npx bombadil inspect bombadil-results' >> bombadil-comment.md
+          echo '```' >> bombadil-comment.md
+        shell: bash
+
+      - name: Comment on PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const body = fs.readFileSync('bombadil-comment.md', 'utf8')
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            })
