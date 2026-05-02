@@ -43,28 +43,36 @@ export default async function ({ init }: FlueContext) {
   );
 
   // STEP 2: Search for each app function in the source code
-  let fileMap: Record<string, { file: string; line: number }> = {};
-  for (const funcName of appFunctions) {
-    try {
-      const { stdout: hits } = await session.shell(
-        `rg -n "(function|const|let|var|export)\\s+${funcName}\\b|\\b${funcName}\\s*[=:]" src/ --type ts --type tsx 2>/dev/null | head -10 || true`
-      );
-      if (hits.trim()) {
-        // Parse first hit: "src/utils/validators.ts:35:export function formatPhone..."
-        const firstLine = hits.trim().split('\n')[0];
-        const match = firstLine.match(/^([^:]+):(\d+):/);
-        if (match && !fileMap[funcName]) {
-          fileMap[funcName] = { file: match[1], line: parseInt(match[2], 10) };
-        }
+  const searchResults = await Promise.all(
+    appFunctions.map(async (funcName) => {
+      try {
+        const { stdout: hits } = await session.shell(
+          `rg -n "(function|const|let|var|export)\\s+${funcName}\\b|\\b${funcName}\\s*[=:]" src/ --type ts --type tsx 2>/dev/null | head -10 || true`
+        );
+        return { funcName, hits };
+      } catch {
+        return { funcName, hits: '' };
       }
-    } catch {
-      // ignore
+    })
+  );
+
+  let fileMap: Record<string, { file: string; line: number }> = {};
+  for (const { funcName, hits } of searchResults) {
+    if (hits.trim()) {
+      // Parse first hit: "src/utils/validators.ts:35:export function formatPhone..."
+      const firstLine = hits.trim().split('\n')[0];
+      const match = firstLine.match(/^([^:]+):(\d+):/);
+      if (match && !fileMap[funcName]) {
+        fileMap[funcName] = { file: match[1], line: parseInt(match[2], 10) };
+      }
     }
   }
 
   // STEP 3: Determine primary and secondary files
-  const primaryFunc = appFunctions[0]; // The function where the error occurred
-  const secondaryFuncs = appFunctions.slice(1); // Callers
+  // The function where the error occurred
+  const primaryFunc = appFunctions[0];
+  // Callers
+  const secondaryFuncs = appFunctions.slice(1);
 
   const primaryFile = primaryFunc && fileMap[primaryFunc] ? fileMap[primaryFunc] : null;
   const secondaryFiles = secondaryFuncs
@@ -93,17 +101,18 @@ export default async function ({ init }: FlueContext) {
   }
 
   // Read secondary files for call-site context
-  let secondaryContents: string[] = [];
-  for (const sf of secondaryFiles) {
-    try {
-      const { stdout: content } = await session.shell(`cat ${sf.file} 2>/dev/null || echo ""`);
-      if (content) {
-        secondaryContents.push(`--- ${sf.file} ---\n${content}`);
+  const readResults = await Promise.all(
+    secondaryFiles.map(async (sf) => {
+      try {
+        const { stdout: content } = await session.shell(`cat ${sf.file} 2>/dev/null || echo ""`);
+        return content ? `--- ${sf.file} ---\n${content}` : '';
+      } catch {
+        return '';
       }
-    } catch {
-      // ignore
-    }
-  }
+    })
+  );
+
+  const secondaryContents: string[] = readResults.filter(Boolean);
 
   // STEP 5: LLM diagnosis with full file context
   const diagnosis = await session.prompt(
