@@ -1,8 +1,8 @@
 allowBuilds:
-  '@google/genai': set this to true or false
-  '@mongodb-js/zstd': set this to true or false
+  '@google/genai': true
+  '@mongodb-js/zstd': true
   cpu-features: true
-  esbuild: set this to true or false
-  node-liblzma: set this to true or false
+  esbuild: true
+  node-liblzma: true
   protobufjs: true
   ssh2: true

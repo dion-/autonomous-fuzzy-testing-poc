@@ -22,7 +22,11 @@
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
+      "@google/genai",
+      "@mongodb-js/zstd",
       "cpu-features",
+      "esbuild",
+      "node-liblzma",
       "protobufjs",
       "ssh2"
     ]
