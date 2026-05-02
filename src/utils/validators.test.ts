@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateDiscount,
+  formatPhone,
   isNonEmpty,
   isValidEmail,
   isValidPhone,
@@ -23,15 +24,16 @@ describe("isValidEmail", () => {
 });
 
 describe("isValidPhone", () => {
-  it("returns true for valid phones", () => {
+  it("returns true for exactly 10 digits", () => {
     expect(isValidPhone("+1234567890")).toBe(true);
     expect(isValidPhone("123-456-7890")).toBe(true);
     expect(isValidPhone("123 456 7890")).toBe(true);
-    expect(isValidPhone("1234567")).toBe(true);
+    expect(isValidPhone("1234567890")).toBe(true);
   });
 
   it("returns false for invalid phones", () => {
     expect(isValidPhone("")).toBe(false);
+    expect(isValidPhone("1234567")).toBe(false);
     expect(isValidPhone("12345")).toBe(false);
     expect(isValidPhone("abc-def-ghij")).toBe(false);
     expect(isValidPhone("+12a")).toBe(false);
@@ -96,5 +98,17 @@ describe("calculateDiscount", () => {
     expect(calculateDiscount("")).toBe(0);
     expect(calculateDiscount("UNKNOWN")).toBe(0);
     expect(calculateDiscount("SAVE15")).toBe(0);
+  });
+});
+
+describe("formatPhone", () => {
+  it("formats 10-digit US numbers", () => {
+    expect(formatPhone("1234567890")).toBe("(123) 456-7890");
+    expect(formatPhone("123-456-7890")).toBe("(123) 456-7890");
+    expect(formatPhone("(123) 456-7890")).toBe("(123) 456-7890");
+  });
+
+  it("returns empty string for empty input", () => {
+    expect(formatPhone("")).toBe("");
   });
 });

@@ -64,4 +64,10 @@ describe("Step4", () => {
     expect(screen.getByText(/instructions: leave at door/i)).toBeInTheDocument();
     expect(screen.getByText(/promo: half/i)).toBeInTheDocument();
   });
+
+  it("renders empty phone gracefully", () => {
+    const data = { ...baseData, personal: { ...baseData.personal, phone: "" } };
+    render(<Step4 data={data} onSubmit={vi.fn()} onEdit={vi.fn()} />);
+    expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+  });
 });

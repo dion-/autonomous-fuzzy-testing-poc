@@ -3,7 +3,8 @@ export function isValidEmail(value: string): boolean {
 }
 
 export function isValidPhone(value: string): boolean {
-  return /^\+?[\d\s-]{7,}$/.test(value);
+  const digits = value.replaceAll(/\D/g, "");
+  return digits.length === 10;
 }
 
 export function isNonEmpty(value: string): boolean {
@@ -29,4 +30,11 @@ export function calculateDiscount(promoCode: string): number {
   if (code === "SAVE20") return 0.2;
   if (code === "HALF") return 0.5;
   return 0;
+}
+
+export function formatPhone(phone: string): string {
+  if (!phone) return "";
+  const cleaned = phone.replaceAll(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)!;
+  return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
