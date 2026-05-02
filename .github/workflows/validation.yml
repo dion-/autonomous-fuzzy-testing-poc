@@ -1,17 +1,17 @@
-name: Fuzzy Test
+name: App Validation
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches-ignore:
-      - 'auto-fix/**'
+      - "auto-fix/**"
 
 env:
   BOMBADIL_TIME_LIMIT: ${{ vars.BOMBADIL_TIME_LIMIT || '2m' }}
 
 jobs:
-  lint-and-typecheck:
-    name: Lint & Typecheck
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,7 +27,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -35,13 +35,9 @@ jobs:
       - name: Lint (oxlint)
         run: pnpm run lint:ci
 
-      - name: Typecheck (tsc)
-        run: pnpm run typecheck
-
-  bombadil:
-    name: Bombadil Fuzzy Test
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
-    needs: lint-and-typecheck
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -56,7 +52,32 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (tsc)
+        run: pnpm run typecheck
+
+  bombadil:
+    name: Bombadil Fuzzy Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -66,7 +87,7 @@ jobs:
 
       - name: Start preview server
         run: |
-          pnpm run preview -- --port 4173 --host &
+          pnpm exec vite preview --port 4173 --host &
           npx wait-on http://localhost:4173
 
       - name: Run Bombadil
@@ -111,17 +132,3 @@ jobs:
           echo 'npx bombadil inspect bombadil-results' >> bombadil-comment.md
           echo '```' >> bombadil-comment.md
         shell: bash
-
-      - name: Comment on PR
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs')
-            const body = fs.readFileSync('bombadil-comment.md', 'utf8')
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body,
-            })

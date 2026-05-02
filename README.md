@@ -8,7 +8,7 @@ An autonomous property-based testing pipeline for a React application. On every 
 - **Linting**: oxlint with all rules enabled
 - **Fuzzy Testing**: Bombadil (`@antithesishq/bombadil`) — property-based UI testing using temporal logic
 - **Autonomous Agent**: OpenCode Go with Kimi K2.6 (Phase 2)
-- **Local CI Testing**: [`act`](https://github.com/nektos/act)
+- **Local CI Testing**: [Agent CI](https://agent-ci.dev) — official GitHub Actions runner locally with ~0ms caching and pause-on-failure
 
 ## Quick Start
 
@@ -29,17 +29,24 @@ pnpm run lint
 pnpm run typecheck
 ```
 
-## Local CI Testing with `act`
+## Local CI Testing with Agent CI
+
+Run the exact same PR workflow locally using the official GitHub Actions runner:
 
 ```bash
-# Install act
-brew install act
+# Run the full PR workflow (lint + typecheck + 2min bombadil)
+pnpm run gh-workflow
 
-# Run the PR workflow locally (no LLM keys needed for Phase 1)
-act pull_request \
-  -P ubuntu-latest=node:22 \
-  -s GITHUB_TOKEN=$(gh auth token)
+# Fast mode — 30s bombadil for quick validation (~3 min total)
+pnpm run gh-workflow:fast
+
+# Pause on failure so you can fix and retry the failed step
+pnpm run gh-workflow:pause
 ```
+
+**Requirements:** Docker Desktop or OrbStack must be running.
+
+**Why Agent CI?** It bind-mounts your local `node_modules` for ~0ms cache warm-up, uses the real GitHub Actions runner (not a compatibility shim), and can pause on failure for interactive debugging.
 
 ## Multi-Step Checkout Form
 

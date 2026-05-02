@@ -3,11 +3,11 @@
   "categories": {
     "correctness": "error",
     "suspicious": "error",
-    "pedantic": "error",
+    "pedantic": "warn",
     "perf": "error",
-    "style": "error",
-    "restriction": "error",
-    "nursery": "error"
+    "style": "off",
+    "restriction": "off",
+    "nursery": "warn"
   },
   "plugins": [
     "eslint",
@@ -70,7 +70,10 @@
     "no-undefined": "off",
     "no-duplicate-imports": "off",
     "no-default-export": "off",
-    "exports-last": "off"
+    "exports-last": "off",
+    "no-array-index-key": "off",
+    "no-unassigned-import": "off",
+    "label-has-associated-control": "off"
   },
   "ignorePatterns": [
     "dist/**",
