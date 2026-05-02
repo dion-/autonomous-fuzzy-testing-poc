@@ -7,9 +7,7 @@ import { Step4 } from './components/Step4'
 import { Navigation } from './components/Navigation'
 import { Modal } from './components/Modal'
 import { Summary } from './components/Summary'
-import { isNonEmpty, isValidEmail, isValidPhone, isValidPostalCode } from './utils/validators'
-
-const TOTAL_STEPS = 4
+import { clampStep, getCanProceed, getNextStep, getPrevStep, TOTAL_STEPS } from './utils/checkout'
 
 export default function App() {
   const [step, setStep] = useState(0)
@@ -17,48 +15,18 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false)
   const { formData, updatePersonal, updateShipping, updatePreferences, clearDraft } = useFormState()
 
-  const canProceed = (() => {
-    switch (step) {
-      case 0:
-        return (
-          isNonEmpty(formData.personal.firstName) &&
-          isNonEmpty(formData.personal.lastName) &&
-          isValidEmail(formData.personal.email) &&
-          isValidPhone(formData.personal.phone)
-        )
-      case 1:
-        return (
-          isNonEmpty(formData.shipping.country) &&
-          isNonEmpty(formData.shipping.address) &&
-          isNonEmpty(formData.shipping.city) &&
-          isNonEmpty(formData.shipping.state) &&
-          isValidPostalCode(formData.shipping.postalCode, formData.shipping.country)
-        )
-      case 2:
-        return true
-      case 3:
-        return true
-      default:
-        return false
-    }
-  })()
+  const canProceed = getCanProceed(step, formData)
 
   function handleNext() {
-    if (step < TOTAL_STEPS - 1) {
-      setStep((s) => s + 1)
-    }
+    setStep((s) => getNextStep(s))
   }
 
   function handleBack() {
-    if (step > 0) {
-      setStep((s) => s - 1)
-    }
+    setStep((s) => getPrevStep(s))
   }
 
   function handleSkipTo(target: number) {
-    if (target >= 0 && target < TOTAL_STEPS) {
-      setStep(target)
-    }
+    setStep((s) => clampStep(target, s))
   }
 
   function handleSubmit() {

@@ -73,7 +73,9 @@
     "exports-last": "off",
     "no-array-index-key": "off",
     "no-unassigned-import": "off",
-    "label-has-associated-control": "off"
+    "label-has-associated-control": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "jsx-no-new-object-as-prop": "off"
   },
   "ignorePatterns": [
     "dist/**",

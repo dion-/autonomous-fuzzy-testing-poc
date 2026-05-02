@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 bombadil-results
 .env.agent-ci
+coverage
