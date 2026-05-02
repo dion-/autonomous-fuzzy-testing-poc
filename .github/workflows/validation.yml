@@ -150,7 +150,13 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           npx flue run analyze-violation --target node --id ci-bombadil-$GITHUB_RUN_ID > flue-output.txt 2>&1
+          echo "--- Flue full output ---"
+          cat flue-output.txt
+          echo "--- End Flue output ---"
           awk '/^\[flue\] Done\./{p=1; next} p' flue-output.txt > flue-result.json
+          echo "--- Extracted JSON ---"
+          cat flue-result.json
+          echo "--- End JSON ---"
           if [ -s flue-result.json ]; then
             echo "has_result=true" >> $GITHUB_OUTPUT
           else
