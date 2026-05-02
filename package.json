@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:bombadil": "pnpm exec vite preview --port 4173 --host & npx wait-on http://localhost:4173 && bombadil test http://localhost:4173 --no-sandbox --exit-on-violation --time-limit 2m --output-path ./bombadil-results",
+    "test:bombadil": "pnpm run build && pnpm exec vite preview --port 4173 --host & npx wait-on http://localhost:4173 && bombadil test http://localhost:4173 --no-sandbox --exit-on-violation --time-limit 10m --output-path ./bombadil-results",
     "ci:local": "npx @redwoodjs/agent-ci run --all --var BOMBADIL_TIME_LIMIT=2m"
   },
   "dependencies": {

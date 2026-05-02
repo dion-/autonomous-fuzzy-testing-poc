@@ -94,7 +94,7 @@ export function Step1({ data, onChange }: Step1Props) {
       <InputRow
         id="phone"
         label="Phone"
-        type="tel"
+        type="text"
         value={data.phone}
         onChange={(v) => onChange("phone", v)}
         error={errors.phone}
