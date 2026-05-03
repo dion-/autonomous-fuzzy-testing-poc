@@ -39,3 +39,7 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+export function capitalizeState(state: string): string {
+  return state[0]!.toUpperCase() + state.slice(1).toLowerCase();
+}
