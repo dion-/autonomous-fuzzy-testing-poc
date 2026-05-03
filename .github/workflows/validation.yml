@@ -251,7 +251,7 @@ jobs:
             process.exit(0);
           }
 
-          // Create or fetch a draft release to host the media files
+          // Create or fetch a release to host the media files
           const tag = `uat-media-pr-${process.env.PR_NUMBER}-${process.env.RUN_ID}`;
           let release;
           try {
@@ -263,7 +263,7 @@ jobs:
             console.log("Using existing release:", tag);
           } catch {
             execSync(
-              `gh release create "${tag}" --draft --title "UAT Media PR #${process.env.PR_NUMBER}" --notes "Screenshots and videos from UAT run."`,
+              `gh release create "${tag}" --prerelease --title "UAT Media PR #${process.env.PR_NUMBER}" --notes "Screenshots and videos from UAT run."`,
               { stdio: "inherit", env: process.env }
             );
             const created = execSync(
