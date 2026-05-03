@@ -2,8 +2,8 @@
 name: analyze-violation
 description: >
   Analyze a Bombadil fuzzy-test crash trace, reproduce the bug with a
-  co-located breaking test, apply a minimal fix, and verify with lint,
-  typecheck, and 100% coverage tests. Iterate until all checks pass.
+  co-located breaking test, apply a minimal fix, verify with lint,
+  typecheck, and 100% coverage tests, then craft and post a PR comment.
 ---
 
 ## Mission
@@ -15,15 +15,16 @@ with an uncaught exception. Your job is to:
 2. **Reproduce** it with a breaking test.
 3. **Fix** the source code minimally.
 4. **Verify** that lint, typecheck, and tests (with 100% coverage) pass.
-5. **Iterate** if anything fails.
+5. **Craft and post** a PR comment describing what you found and did.
 
 ## Input
 
-You receive a `traceContext` argument (JSON string) containing:
+You receive:
 
-- `violation` — the full Bombadil violation object
-- `uncaughtExceptions` — array of uncaught exception strings
-- `actionsBeforeCrash` — last user actions before the crash
+- `traceContext` — JSON string with the Bombadil violation, uncaught exceptions,
+  and action history.
+- `prNumber` — The GitHub pull request number (if running in CI).
+- `repo` — The GitHub repository in `owner/repo` format (if running in CI).
 
 ## Tools at your disposal
 
@@ -115,22 +116,47 @@ to finish before starting the next:
 Repeat this loop as many times as needed. Do not stop until lint, typecheck,
 and coverage tests are all green.
 
-### 5. Persist the result
+### 5. Craft and post a PR comment
 
-When everything passes, write a JSON file named `flue-result.json` in the root
-of the workspace. To ensure perfectly valid JSON, use `node` to serialize it:
+Once verification passes, write a clear, helpful PR comment. **You have full
+freedom to choose the format** — use tables, collapsible sections, diff blocks,
+or bullet points as appropriate for the complexity and nature of the bug.
+
+The comment should communicate:
+- What crashed and why
+- Where the bug was located
+- What fix you applied
+- That lint, typecheck, and tests all pass
+
+Write the comment to `flue-comment.md` using Node (to avoid escaping issues):
+
+```bash
+node -e '
+const fs = require("fs");
+fs.writeFileSync("flue-comment.md", `## Your crafted comment here...`);
+'
+```
+
+If `prNumber` and `repo` are available, post the comment directly to the PR:
+
+```bash
+gh pr comment <prNumber> --repo <repo> --body-file flue-comment.md
+```
+
+If posting fails, diagnose the `gh` error and retry once. If it still fails,
+keep `flue-comment.md` written so humans can post it manually.
+
+### 6. Persist the result
+
+Write a minimal JSON file named `flue-result.json` in the root of the workspace.
+Use Node to serialize it to guarantee valid JSON:
 
 ```bash
 node -e '
 const fs = require("fs");
 fs.writeFileSync("flue-result.json", JSON.stringify({
-  problemDescription: "...",
-  rationale: "...",
   file: "...",
   line: 0,
-  oldCode: "...",
-  newCode: "...",
-  testFile: "...",
   verificationStatus: "verified",
   verificationOutput: "..."
 }, null, 2));

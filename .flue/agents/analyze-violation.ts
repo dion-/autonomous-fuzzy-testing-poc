@@ -1,34 +1,35 @@
+/* global process */
+
 import type { FlueContext } from '@flue/sdk/client';
 import { defineCommand } from '@flue/sdk/node';
+import * as fs from 'fs';
 
 export const triggers = {};
 
 /**
- * Write a file via shell using base64 to avoid escaping issues.
- * @param {{ shell: (cmd: string) => Promise<{ stdout: string; stderr: string; exitCode: number }> }} session - Agent session with shell method.
- * @param {string} path - File path to write to.
- * @param {string} content - File content.
+ * Read GitHub Actions PR context from the event payload.
+ * @returns {{ number?: string; repo?: string }} PR number and repo, if available.
  */
-async function writeFile(
-  session: { shell: (cmd: string) => Promise<{ stdout: string; stderr: string; exitCode: number }> },
-  path: string,
-  content: string
-) {
-  // eslint-disable-next-line no-undef
-  const b64 = Buffer.from(content, 'utf8').toString('base64');
-  const { exitCode, stderr } = await session.shell(
-    `printf "%s" "${b64}" | base64 -d > ${path}`
-  );
-  if (exitCode !== 0) {
-    throw new Error(`Failed to write ${path}: ${stderr}`);
+function readPrContext(): { number?: string; repo?: string } {
+  try {
+    const eventPath = process.env.GITHUB_EVENT_PATH;
+    if (!eventPath) return {};
+    const event = JSON.parse(fs.readFileSync(eventPath, 'utf8'));
+    return {
+      number: event.pull_request?.number?.toString(),
+      repo: process.env.GITHUB_REPOSITORY,
+    };
+  } catch {
+    return {};
   }
 }
 
 export default async function ({ init }: FlueContext) {
-  // Connect host CLIs so the skill can run lint/typecheck/tests.
+  // Connect host CLIs so the skill can run lint/typecheck/tests and post comments.
   const node = defineCommand('node');
   const pnpm = defineCommand('pnpm');
   const npx = defineCommand('npx');
+  const gh = defineCommand('gh');
 
   const agent = await init({
     sandbox: 'local',
@@ -49,6 +50,8 @@ export default async function ({ init }: FlueContext) {
     `jq -s 'map(select(.action != null and .action != "Wait")) | .[-10:] | map({action,timestamp})' bombadil-results/trace.jsonl 2>/dev/null || echo '[]'`
   );
 
+  const pr = readPrContext();
+
   const traceContext = JSON.stringify({
     violation,
     uncaughtExceptions,
@@ -56,94 +59,18 @@ export default async function ({ init }: FlueContext) {
   });
 
   // ── 2. Delegate entirely to the autonomous skill ─────────────────────────
-  // The skill writes flue-result.json when it finishes.
+  // The skill investigates, fixes, verifies, crafts a PR comment, and posts it.
   await session.skill('analyze-violation', {
-    args: { traceContext },
-    commands: [node, pnpm, npx],
+    args: { traceContext, prNumber: pr.number, repo: pr.repo },
+    commands: [node, pnpm, npx, gh],
   });
 
   // ── 3. Read the structured result produced by the skill ──────────────────
-  const { stdout: resultJson, exitCode: resultExit } = await session.shell(
-    'cat flue-result.json 2>/dev/null || echo ""'
+  const { stdout: resultJson } = await session.shell(
+    'cat flue-result.json 2>/dev/null || echo "{}"'
   );
 
-  if (resultExit !== 0 || !resultJson.trim()) {
-    throw new Error('Skill did not produce flue-result.json');
-  }
-
-  const result = JSON.parse(resultJson);
-
-  // ── 4. Build rich PR comment ─────────────────────────────────────────────
-  const diffBlock =
-    result.oldCode && result.newCode
-      ? `\`\`\`diff\n${result.oldCode
-          .split('\n')
-          .map((l: string) => `- ${l}`)
-          .join('\n')}\n${result.newCode
-          .split('\n')
-          .map((l: string) => `+ ${l}`)
-          .join('\n')}\n\`\`\``
-      : '*No diff available.*';
-
-  const commentMarkdown = `## 🐛 Bombadil Fuzzy Test Failure
-
-### Problem
-
-${result.problemDescription}
-
-### Reproduction
-
-A breaking test was added in \`${result.testFile}\`.
-
-### Fix
-
-${diffBlock}
-
-### Rationale
-
-${result.rationale}
-
-### Verification
-
-| Check | Status |
-|---|---|
-| Lint | ${result.verificationStatus === 'verified' ? '✅' : '❌'} |
-| Typecheck | ${result.verificationStatus === 'verified' ? '✅' : '❌'} |
-| Tests + Coverage | ${result.verificationStatus === 'verified' ? '✅' : '❌'} |
-
-<pre>${result.verificationOutput}</pre>
-
----
-
-Full trace, screenshots and state transitions are available in the \`bombadil-results\` artifact.
-
-\`\`\`bash
-npx bombadil inspect bombadil-results
-\`\`\`
-`;
-
-  await writeFile(session, 'flue-comment.md', commentMarkdown);
-
-  const outputJson = JSON.stringify(
-    {
-      diagnosis: {
-        file: result.file,
-        line: result.line,
-      },
-      analysis: {
-        problemDescription: result.problemDescription,
-        rationale: result.rationale,
-        oldCode: result.oldCode,
-        newCode: result.newCode,
-        testFile: result.testFile,
-        verificationStatus: result.verificationStatus,
-        verificationOutput: result.verificationOutput,
-      },
-    },
-    null,
-    2
-  );
-  await writeFile(session, 'flue-result.json', outputJson);
+  const result = JSON.parse(resultJson || '{}');
 
   return {
     status: result.verificationStatus === 'verified' ? 'success' : 'partial',
