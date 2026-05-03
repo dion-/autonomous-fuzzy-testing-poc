@@ -189,6 +189,10 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
+      - name: Extract PR diff
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD -- src/ > flue-diff.txt 2>/dev/null || true
+
       - name: Run Flue UAT Agent
         id: flue-uat
         continue-on-error: true

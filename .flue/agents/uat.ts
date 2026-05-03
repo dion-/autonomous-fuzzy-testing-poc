@@ -3,6 +3,7 @@
 import type { FlueContext } from "@flue/sdk/client";
 import { defineCommand } from "@flue/sdk/node";
 import * as fs from "fs";
+import * as path from "path";
 
 export const triggers = {};
 
@@ -11,6 +12,21 @@ interface PrContext {
   repo?: string;
   title?: string;
   body?: string;
+  baseRef?: string;
+}
+
+/**
+ * Locate the repository root by walking up from the agent file.
+ */
+function findRepoRoot(): string {
+  let dir = __dirname;
+  while (dir !== path.parse(dir).root) {
+    if (fs.existsSync(path.join(dir, "package.json"))) {
+      return dir;
+    }
+    dir = path.dirname(dir);
+  }
+  return process.cwd();
 }
 
 /**
@@ -26,6 +42,7 @@ function readPrContext(): PrContext {
       repo: process.env.GITHUB_REPOSITORY,
       title: event.pull_request?.title,
       body: event.pull_request?.body,
+      baseRef: event.pull_request?.base?.ref,
     };
   } catch {
     return {};
@@ -53,14 +70,24 @@ export default async function ({ init }: FlueContext) {
     );
   }
 
-  // Extract PR diff.
-  // In CI: HEAD is a merge commit; HEAD^1=main, HEAD^2=PR branch.
-  // Locally: HEAD is a regular commit; fall back to diff against parent.
-  const { stdout: diff } = await session.shell(
-    'git diff HEAD^1 HEAD^2 -- src/ 2>/dev/null || git diff HEAD~1 -- src/ || echo ""'
-  );
-
   const pr = readPrContext();
+
+  // Extract PR diff.
+  // In CI the workflow writes flue-diff.txt before the agent runs, so we
+  // read that first. If it is missing (local runs) we fall back to a shell
+  // git command diffing against the PR base branch.
+  const repoRoot = findRepoRoot();
+  const diffPath = path.join(repoRoot, "flue-diff.txt");
+  let diff = "";
+  try {
+    diff = fs.readFileSync(diffPath, "utf8");
+  } catch {
+    const baseRef = pr.baseRef || "main";
+    const { stdout } = await session.shell(
+      `git diff origin/${baseRef}...HEAD -- src/ 2>/dev/null || git diff HEAD~1 -- src/ || echo ""`
+    );
+    diff = stdout;
+  }
   const runId = process.env.GITHUB_RUN_ID;
   const runUrl =
     runId && pr.repo
