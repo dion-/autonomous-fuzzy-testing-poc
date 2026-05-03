@@ -1,5 +1,5 @@
 import type { FormData } from "../hooks/useFormState";
-import { calculateDiscount, formatPhone } from "../utils/validators";
+import { calculateDiscount, formatPhone, formatPhoneDisplay } from "../utils/validators";
 
 interface Step4Props {
   data: FormData;
@@ -50,6 +50,7 @@ export function Step4({ data, onSubmit, onEdit }: Step4Props) {
           </p>
           <p>{data.personal.email}</p>
           <p>{formatPhone(data.personal.phone)}</p>
+          <p>{formatPhoneDisplay(data.personal.phone)}</p>
         </ReviewSection>
 
         <ReviewSection title="Shipping" onEdit={() => onEdit(1)}>
