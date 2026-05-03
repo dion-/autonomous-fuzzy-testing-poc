@@ -25,11 +25,10 @@ function readPrContext(): { number?: string; repo?: string } {
 }
 
 export default async function ({ init }: FlueContext) {
-  // Connect host CLIs so the skill can run lint/typecheck/tests and post comments.
+  // Connect host CLIs so the skill can run lint/typecheck/tests.
   const node = defineCommand('node');
   const pnpm = defineCommand('pnpm');
   const npx = defineCommand('npx');
-  const gh = defineCommand('gh');
 
   const agent = await init({
     sandbox: 'local',
@@ -58,11 +57,11 @@ export default async function ({ init }: FlueContext) {
     actionsBeforeCrash: JSON.parse(actionsJson || '[]'),
   });
 
-  // ── 2. Delegate entirely to the autonomous skill ─────────────────────────
-  // The skill investigates, fixes, verifies, crafts a PR comment, and posts it.
+  // ── 2. Delegate to the autonomous skill ──────────────────────────────────
+  // The skill investigates, fixes, verifies, and writes flue-comment.md.
   await session.skill('analyze-violation', {
-    args: { traceContext, prNumber: pr.number, repo: pr.repo },
-    commands: [node, pnpm, npx, gh],
+    args: { traceContext },
+    commands: [node, pnpm, npx],
   });
 
   // ── 3. Read the structured result produced by the skill ──────────────────
@@ -71,6 +70,23 @@ export default async function ({ init }: FlueContext) {
   );
 
   const result = JSON.parse(resultJson || '{}');
+
+  // ── 4. Post PR comment (orchestrator-side for reliability) ───────────────
+  if (pr.number && pr.repo && fs.existsSync('flue-comment.md')) {
+    // Connect gh with the auth token so the sandbox can use it.
+    const gh = defineCommand('gh', {
+      env: { GH_TOKEN: process.env.GH_TOKEN ?? '' },
+    });
+
+    const { exitCode, stderr } = await session.shell(
+      `gh pr comment ${pr.number} --repo ${pr.repo} --body-file flue-comment.md`,
+      { commands: [gh] }
+    );
+
+    if (exitCode !== 0) {
+      console.error('Failed to post PR comment:', stderr);
+    }
+  }
 
   return {
     status: result.verificationStatus === 'verified' ? 'success' : 'partial',

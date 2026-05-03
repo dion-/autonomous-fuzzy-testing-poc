@@ -3,7 +3,8 @@ name: analyze-violation
 description: >
   Analyze a Bombadil fuzzy-test crash trace, reproduce the bug with a
   co-located breaking test, apply a minimal fix, verify with lint,
-  typecheck, and 100% coverage tests, then craft and post a PR comment.
+  typecheck, and 100% coverage tests, then write a PR comment to
+  flue-comment.md.
 ---
 
 ## Mission
@@ -15,16 +16,15 @@ with an uncaught exception. Your job is to:
 2. **Reproduce** it with a breaking test.
 3. **Fix** the source code minimally.
 4. **Verify** that lint, typecheck, and tests (with 100% coverage) pass.
-5. **Craft and post** a PR comment describing what you found and did.
+5. **Write** a PR comment describing what you found and did.
 
 ## Input
 
-You receive:
+You receive a `traceContext` argument (JSON string) containing:
 
-- `traceContext` — JSON string with the Bombadil violation, uncaught exceptions,
-  and action history.
-- `prNumber` — The GitHub pull request number (if running in CI).
-- `repo` — The GitHub repository in `owner/repo` format (if running in CI).
+- `violation` — the full Bombadil violation object
+- `uncaughtExceptions` — array of uncaught exception strings
+- `actionsBeforeCrash` — last user actions before the crash
 
 ## Tools at your disposal
 
@@ -116,7 +116,7 @@ to finish before starting the next:
 Repeat this loop as many times as needed. Do not stop until lint, typecheck,
 and coverage tests are all green.
 
-### 5. Craft and post a PR comment
+### 5. Write a PR comment
 
 Once verification passes, write a clear, helpful PR comment. **You have full
 freedom to choose the format** — use tables, collapsible sections, diff blocks,
@@ -131,15 +131,6 @@ The comment should communicate:
 Write the comment to `flue-comment.md` using the **`write` tool**. Do **not** use
 `node -e` or any shell command that embeds the markdown — backticks and
 parentheses in the comment will break shell parsing.
-
-After the file is written, post it to the PR:
-
-```bash
-gh pr comment <prNumber> --repo <repo> --body-file flue-comment.md
-```
-
-If posting fails, diagnose the `gh` error and retry once. If it still fails,
-keep `flue-comment.md` written so humans can post it manually.
 
 ### 6. Persist the result
 
