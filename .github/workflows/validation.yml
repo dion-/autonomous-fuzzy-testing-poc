@@ -188,11 +188,6 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
-      - name: Fetch main for diff
-        run: |
-          git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
-          git fetch origin main --depth=1
-
       - name: Run Flue UAT Agent
         id: flue-uat
         continue-on-error: true

@@ -53,9 +53,11 @@ export default async function ({ init }: FlueContext) {
     );
   }
 
-  // Extract diff of src/ against main (workflow fetches origin/main first)
+  // Extract PR diff.
+  // In CI: HEAD is a merge commit; HEAD^1=main, HEAD^2=PR branch.
+  // Locally: HEAD is a regular commit; fall back to diff against parent.
   const { stdout: diff } = await session.shell(
-    'git diff origin/main...HEAD -- src/ || git diff HEAD~1 -- src/ || echo ""'
+    'git diff HEAD^1 HEAD^2 -- src/ 2>/dev/null || git diff HEAD~1 -- src/ || echo ""'
   );
 
   const pr = readPrContext();
