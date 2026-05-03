@@ -118,19 +118,20 @@ and coverage tests are all green.
 
 ### 5. Write a PR comment
 
-Once verification passes, write a clear, helpful PR comment. **You have full
-freedom to choose the format** — use tables, collapsible sections, diff blocks,
-or bullet points as appropriate for the complexity and nature of the bug.
+Write a clear, helpful PR comment to `flue-comment.md` using the **`write` tool**.
+Do **not** use `node -e` or any shell command that embeds the markdown.
 
-The comment should communicate:
-- What crashed and why
-- Where the bug was located
-- What fix you applied
-- That lint, typecheck, and tests all pass
+**Important:** The changes you make in the sandbox are **not persisted** to the
+PR. The comment's purpose is to help the PR author understand the problem and
+provide a path forward. Keep the tone helpful, not prescriptive.
 
-Write the comment to `flue-comment.md` using the **`write` tool**. Do **not** use
-`node -e` or any shell command that embeds the markdown — backticks and
-parentheses in the comment will break shell parsing.
+The comment should be **simple, concise, and free of emojis**. It must:
+- Explain the problem in the context of the app (what user action triggered it)
+- State the error clearly, as the author may not know a problem exists
+- Identify the exact file and line where the crash originates
+- Provide a minimal code diff showing the suggested fix
+- Mention that you verified the fix with lint, typecheck, and 100% coverage tests
+- Keep it brief — the author should be able to scan it quickly
 
 ### 6. Persist the result
 
