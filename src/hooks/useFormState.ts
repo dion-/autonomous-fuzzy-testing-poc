@@ -50,8 +50,7 @@ function loadDraft(): FormData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as FormData;
-      return { ...defaultFormData, ...parsed };
+      return JSON.parse(raw) as FormData;
     }
   } catch {
     // ignore parse errors
