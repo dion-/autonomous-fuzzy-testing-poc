@@ -39,3 +39,8 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+export function maskEmail(email: string): string {
+  const local = email.split("@")[0]!;
+  return `${local[0]}***@${email.split("@")[1]!}`;
+}

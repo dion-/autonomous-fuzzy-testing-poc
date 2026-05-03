@@ -15,7 +15,7 @@ describe("Step4", () => {
     const data = { ...baseData, preferences: { ...baseData.preferences, newsletter: true } };
     render(<Step4 data={data} onSubmit={vi.fn()} onEdit={vi.fn()} />);
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
-    expect(screen.getByText("jane@example.com")).toBeInTheDocument();
+    expect(screen.getByText("j***@example.com")).toBeInTheDocument();
     expect(screen.getByText("123 Main")).toBeInTheDocument();
     expect(screen.getByText("Newsletter: Yes")).toBeInTheDocument();
     expect(screen.getByText("Gift wrap: No")).toBeInTheDocument();
