@@ -148,33 +148,7 @@ jobs:
         continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          npx flue run analyze-violation --target node --id ci-bombadil-$GITHUB_RUN_ID
-        shell: bash
-
-      - name: Post PR Comment
-        if: failure()
-        env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -f flue-comment.md ]; then
-            echo "Posting Flue-generated comment..."
-            gh pr comment ${{ github.event.pull_request.number }} --body-file flue-comment.md
-          else
-            echo "Posting default fallback comment..."
-            gh pr comment ${{ github.event.pull_request.number }} --body-file - << 'EOF'
-          ## 🐛 Bombadil Fuzzy Test Failure
-
-          Bombadil detected property violations during fuzzy testing.
-
-          ### Violations
-
-          See the uploaded artifact `bombadil-results` for the full trace, screenshots, and state transitions.
-
-          You can inspect locally with:
-          ```bash
-          npx bombadil inspect bombadil-results
-          ```
-          EOF
-          fi
+          npx flue run analyze-violation --target node --id ci-bombadil-$GITHUB_RUN_ID
         shell: bash
