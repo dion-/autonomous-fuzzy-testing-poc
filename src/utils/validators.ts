@@ -39,3 +39,13 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+const shippingLabels: Record<string, string> = {
+  US: "Domestic Standard",
+  CA: "Cross-Border Express",
+  UK: "International Priority",
+};
+
+export function getShippingLabel(code: string): string {
+  return shippingLabels[code]!.toUpperCase();
+}
