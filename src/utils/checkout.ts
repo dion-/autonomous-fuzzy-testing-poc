@@ -43,3 +43,7 @@ export function clampStep(target: number, currentStep: number): number {
   if (target >= 0 && target < TOTAL_STEPS) return target;
   return currentStep;
 }
+
+export function generateOrderId(firstName: string, lastName: string): string {
+  return `${firstName[0]!.toUpperCase()}${lastName[0]!.toUpperCase()}-${Date.now().toString(36)}`;
+}

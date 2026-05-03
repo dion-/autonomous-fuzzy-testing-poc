@@ -7,7 +7,7 @@ import { Step4 } from "./components/Step4";
 import { Navigation } from "./components/Navigation";
 import { Modal } from "./components/Modal";
 import { Summary } from "./components/Summary";
-import { clampStep, getCanProceed, getNextStep, getPrevStep, TOTAL_STEPS } from "./utils/checkout";
+import { clampStep, generateOrderId, getCanProceed, getNextStep, getPrevStep, TOTAL_STEPS } from "./utils/checkout";
 
 export default function App() {
   const [step, setStep] = useState(0);
@@ -31,6 +31,7 @@ export default function App() {
   }
 
   function handleSubmit() {
+    void generateOrderId(formData.personal.firstName, formData.personal.lastName);
     setSubmitted(true);
     clearDraft();
   }
