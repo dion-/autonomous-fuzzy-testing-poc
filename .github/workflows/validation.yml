@@ -157,6 +157,7 @@ jobs:
     name: UAT — Playwright
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pull-requests: write
     steps:
       - name: Checkout
@@ -209,6 +210,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           node -e '
           const fs = require("fs");
@@ -225,6 +227,7 @@ jobs:
 
           function collectFiles(dir, ext) {
             const results = [];
+            if (!fs.existsSync(dir)) return results;
             for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
               const full = path.join(dir, entry.name);
               if (entry.isDirectory()) {
@@ -236,58 +239,81 @@ jobs:
             return results;
           }
 
-          const screenshots = fs.existsSync("test-results") ? collectFiles("test-results", ".png").sort() : [];
-          const videos = fs.existsSync("test-results") ? collectFiles("test-results", ".webm").sort() : [];
+          const screenshots = collectFiles("test-results", ".png").sort();
+          const videos = collectFiles("test-results", ".webm").sort();
+          const mediaFiles = [...screenshots, ...videos];
 
-          async function uploadFile(filePath) {
-            const repo = process.env.REPO;
-            const token = process.env.GH_TOKEN;
-            const response = execSync(
-              `curl -s -X POST -H "Accept: application/json" -H "Authorization: token ${token}" -F "file=@${filePath}" "https://uploads.github.com/repos/${repo}/issues/files"`,
-              { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 }
-            );
-            try {
-              const json = JSON.parse(response);
-              return json.href || null;
-            } catch {
-              console.error("Upload failed for", filePath, response);
-              return null;
-            }
-          }
-
-          async function main() {
-            if (screenshots.length > 0) {
-              comment += "\n\n### Screenshots\n";
-              for (const img of screenshots) {
-                const url = await uploadFile(img);
-                if (url) {
-                  comment += `\n![${path.basename(img)}](${url})`;
-                }
-              }
-            }
-
-            if (videos.length > 0) {
-              comment += "\n\n### Videos\n";
-              for (const vid of videos) {
-                const url = await uploadFile(vid);
-                if (url) {
-                  comment += `\n\n<video src="${url}" controls width="100%"></video>`;
-                }
-              }
-            }
-
-            const finalFile = "flue-comment-final.md";
-            fs.writeFileSync(finalFile, comment);
+          if (mediaFiles.length === 0) {
             execSync(
-              `gh pr comment ${process.env.PR_NUMBER} --repo ${process.env.REPO} --body-file ${finalFile}`,
-              { stdio: "inherit", env: { ...process.env, GH_TOKEN: process.env.GH_TOKEN } }
+              `gh pr comment ${process.env.PR_NUMBER} --repo ${process.env.REPO} --body-file ${commentFile}`,
+              { stdio: "inherit" }
             );
+            process.exit(0);
           }
 
-          main().catch(err => {
-            console.error(err);
-            process.exit(1);
-          });
+          // Create a draft release to host the media files
+          const tag = `uat-media-pr-${process.env.PR_NUMBER}-${process.env.RUN_ID}`;
+          try {
+            execSync(
+              `gh release create "${tag}" --draft --title "UAT Media PR #${process.env.PR_NUMBER}" --notes "Screenshots and videos from UAT run."`,
+              { stdio: "ignore", env: process.env }
+            );
+          } catch {
+            // Tag may already exist; continue
+          }
+
+          // Upload each file as a release asset
+          for (const file of mediaFiles) {
+            try {
+              execSync(
+                `gh release upload "${tag}" "${file}" --clobber`,
+                { stdio: "ignore", env: process.env }
+              );
+            } catch (err) {
+              console.error("Failed to upload", file, err.message);
+            }
+          }
+
+          // Fetch release assets to get public URLs
+          const releaseJson = execSync(
+            `gh api repos/${process.env.REPO}/releases/tags/${tag}`,
+            { encoding: "utf8", env: process.env }
+          );
+          const release = JSON.parse(releaseJson);
+          const assetMap = new Map();
+          for (const asset of release.assets || []) {
+            assetMap.set(asset.name, asset.browser_download_url);
+          }
+
+          // Build markdown with embedded media
+          if (screenshots.length > 0) {
+            comment += "\n\n### Screenshots\n";
+            for (const img of screenshots) {
+              const name = path.basename(img);
+              const url = assetMap.get(name);
+              if (url) {
+                comment += `\n\n**${name}**\n\n![${name}](${url})`;
+              }
+            }
+          }
+
+          if (videos.length > 0) {
+            comment += "\n\n### Videos\n";
+            for (const vid of videos) {
+              const name = path.basename(vid);
+              const url = assetMap.get(name);
+              if (url) {
+                comment += `\n\n**${name}**\n\n<video src="${url}" controls width="100%"></video>`;
+              }
+            }
+          }
+
+          const finalFile = "flue-comment-final.md";
+          fs.writeFileSync(finalFile, comment);
+          execSync(
+            `gh pr comment ${process.env.PR_NUMBER} --repo ${process.env.REPO} --body-file ${finalFile}`,
+            { stdio: "inherit", env: process.env }
+          );
           '
         shell: bash
 
