@@ -133,9 +133,12 @@ export default async function ({ init }: FlueContext) {
     )
   ).filter(Boolean);
 
-  // ── 5. LLM diagnosis ─────────────────────────────────────────────────────
-  const diagnosis = await session.prompt(
-    `You are an expert frontend debugger analyzing a production app crash found by fuzzy testing.\n\n` +
+  // ── 5. Unified LLM analysis ──────────────────────────────────────────────
+  // This single prompt asks the LLM to analyze the bug and produce either
+  // a concrete diff or an explanatory suggestion. It does NOT assume a
+  // single-line fix.
+  const analysis = await session.prompt(
+    `You are an expert debugger analyzing a crash found by automated fuzzy testing.\n\n` +
       `ERROR TYPE: ${errorType}\n` +
       `ERROR MESSAGE: ${errorMessage}\n\n` +
       `STACK TRACE:\n${stackTrace}\n\n` +
@@ -144,99 +147,69 @@ export default async function ({ init }: FlueContext) {
       (secondaryContents.length > 0
         ? `CALLER FILES:\n${secondaryContents.join('\n\n')}\n\n`
         : '') +
-      `Your task:\n` +
-      `1. Analyze the error message and stack trace carefully.\n` +
-      `2. The error occurred in function "${primaryFunc}" in ${primaryFile.file}.\n` +
-      `3. Identify the EXACT line number and root cause.\n` +
-      `4. Consider how the error message relates to the code.\n\n` +
-      `Return ONLY the file path and line number.`,
+      `Analyze the crash and return your findings. Be specific and concise.\n\n` +
+      `If you can identify a concrete, localized code change that fixes the bug, set suggestionType to "diff" and provide oldCode and newCode.\n` +
+      `oldCode must be an EXACT substring from the primary source file above.\n` +
+      `newCode must be the corrected replacement.\n` +
+      `The diff may span multiple lines if necessary.\n\n` +
+      `If the fix is unclear, requires changes across multiple files, or is architectural in nature, set suggestionType to "explanation" and provide suggestionText instead.\n` +
+      `In explanation mode, describe what is wrong and what the developer should do to fix it.`,
     {
       result: v.object({
         file: v.string(),
         line: v.number(),
+        summary: v.string(),
+        suggestionType: v.picklist(['diff', 'explanation']),
+        oldCode: v.optional(v.string()),
+        newCode: v.optional(v.string()),
+        suggestionText: v.optional(v.string()),
       }),
     }
   );
 
-  // ── 6. Read target file for fix generation ───────────────────────────────
-  const targetFile = diagnosis.file || primaryFile.file;
-  const { stdout: targetContent } = await session.shell(
-    `cat ${targetFile} 2>/dev/null || echo "FILE_NOT_FOUND"`
-  );
-  if (targetContent === 'FILE_NOT_FOUND') {
-    await writeFile(
-      session,
-      'flue-comment.md',
-      buildFallbackComment(`Could not read file: ${targetFile}`, stackTrace)
-    );
-    return { status: 'fallback', reason: 'target_file_not_found' };
-  }
+  const targetFile = analysis.file || primaryFile.file;
 
-  // ── 7. LLM fix generation ────────────────────────────────────────────────
-  const fixText = await session.prompt(
-    `You are fixing a bug in ${targetFile}.\n\n` +
-      `ERROR: ${errorType}: ${errorMessage}\n\n` +
-      `STACK TRACE CONTEXT:\n` +
-      `- Error occurred in function: ${primaryFunc}\n` +
-      `- Called from: ${secondaryFuncs.join(', ')}\n\n` +
-      `FULL FILE CONTENT:\n${targetContent}\n\n` +
-      `RULES:\n` +
-      `1. oldString must be an EXACT, UNIQUE substring from the file above.\n` +
-      `2. newString must be the corrected version.\n` +
-      `3. Preserve ALL existing logic, comments, and formatting.\n` +
-      `4. Only change what is necessary to fix the bug.\n` +
-      `5. Do NOT invent new regex patterns or logic.\n\n` +
-      `OUTPUT FORMAT (strict):\n` +
-      `EXPLANATION: <one sentence describing the fix>\n` +
-      `OLD:\n<exact old code>\n` +
-      `NEW:\n<exact new code>\n` +
-      `END`
-  );
-
-  const fixTextStr =
-    typeof fixText === 'string' ? fixText : (fixText as any)?.text || String(fixText);
-  const explanationMatch = fixTextStr.match(/EXPLANATION:\s*(.+)/);
-  const oldMatch = fixTextStr.match(/OLD:\n([\s\S]+?)\nNEW:/);
-  const newMatch = fixTextStr.match(/NEW:\n([\s\S]+?)\nEND/);
-
-  const explanation = explanationMatch ? explanationMatch[1] : '';
-  const oldString = oldMatch ? oldMatch[1].trimEnd() : '';
-  const newString = newMatch ? newMatch[1].trimEnd() : '';
-
-  // ── 8. Build and write PR comment ────────────────────────────────────────
+  // ── 6. Build and write PR comment ────────────────────────────────────────
   const commentMarkdown = buildComment({
     file: targetFile,
-    line: diagnosis.line,
+    line: analysis.line,
     errorType,
     errorMessage,
     primaryFunc,
     secondaryFuncs,
-    explanation,
-    oldString,
-    newString,
+    summary: analysis.summary,
+    suggestionType: analysis.suggestionType,
+    oldCode: analysis.oldCode || '',
+    newCode: analysis.newCode || '',
+    suggestionText: analysis.suggestionText || '',
   });
 
   await writeFile(session, 'flue-comment.md', commentMarkdown);
 
-  // Also write structured JSON for downstream automation
   const resultJson = JSON.stringify(
     {
       diagnosis: {
         file: targetFile,
-        line: diagnosis.line,
+        line: analysis.line,
         errorType,
         errorMessage,
         primaryFunc,
         callerFuncs: secondaryFuncs,
       },
-      fix: { oldString, newString, explanation },
+      analysis: {
+        summary: analysis.summary,
+        suggestionType: analysis.suggestionType,
+        oldCode: analysis.oldCode,
+        newCode: analysis.newCode,
+        suggestionText: analysis.suggestionText,
+      },
     },
     null,
     2
   );
   await writeFile(session, 'flue-result.json', resultJson);
 
-  return { status: 'success', file: targetFile, line: diagnosis.line };
+  return { status: 'success', file: targetFile, line: analysis.line };
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -248,59 +221,50 @@ function buildComment(data: {
   errorMessage: string;
   primaryFunc: string;
   secondaryFuncs: string[];
-  explanation: string;
-  oldString: string;
-  newString: string;
+  summary: string;
+  suggestionType: 'diff' | 'explanation';
+  oldCode: string;
+  newCode: string;
+  suggestionText: string;
 }): string {
-  const diffOld = data.oldString
-    .split('\n')
-    .map((l) => `- ${l}`)
-    .join('\n');
-  const diffNew = data.newString
-    .split('\n')
-    .map((l) => `+ ${l}`)
-    .join('\n');
+  let body = `## 🐛 Bombadil detected a crash
 
-  const hasFix = data.oldString && data.newString;
+> ${data.summary}
 
-  let body = `## 🐛 Bombadil Fuzzy Test Failure
-
-Bombadil detected property violations during fuzzy testing.
-
-### Diagnosis
-
-| | |
-|---|---|
-| **File** | \`${data.file}\` |
-| **Line** | \`${data.line}\` |
-| **Function** | \`${data.primaryFunc}\` |
-
-**Error:** ${data.errorType}: \`${data.errorMessage}\`
+**\`${data.file}\`:**${data.line} — \`${data.primaryFunc}\` throws ${data.errorType}
 `;
 
   if (data.secondaryFuncs.length > 0) {
-    body += `\n**Call stack:** ${data.primaryFunc} ← ${data.secondaryFuncs.join(' ← ')}\n`;
+    body += `\nCalled from: ${data.secondaryFuncs.join(' ← ')}\n`;
   }
 
-  if (hasFix) {
-    body += `
-### Proposed Fix
+  if (data.suggestionType === 'diff' && data.oldCode && data.newCode) {
+    const diffOld = data.oldCode
+      .split('\n')
+      .map((l) => `- ${l}`)
+      .join('\n');
+    const diffNew = data.newCode
+      .split('\n')
+      .map((l) => `+ ${l}`)
+      .join('\n');
 
+    body += `
 \`\`\`diff
 ${diffOld}
 ${diffNew}
 \`\`\`
-
-**Explanation:** ${data.explanation}
+`;
+  } else if (data.suggestionType === 'explanation' && data.suggestionText) {
+    body += `
+${data.suggestionText}
 `;
   }
 
   body += `
-### Action Sequence
+---
 
-See the uploaded artifact \`bombadil-results\` for the full trace, screenshots, and state transitions.
+Full trace, screenshots and state transitions are available in the \`bombadil-results\` artifact.
 
-You can inspect locally with:
 \`\`\`bash
 npx bombadil inspect bombadil-results
 \`\`\`
@@ -310,11 +274,7 @@ npx bombadil inspect bombadil-results
 }
 
 function buildFallbackComment(reason: string, stackTrace: string): string {
-  return `## 🐛 Bombadil Fuzzy Test Failure
-
-Bombadil detected property violations during fuzzy testing.
-
-### Diagnosis
+  return `## 🐛 Bombadil detected a crash
 
 ${reason}
 
@@ -323,11 +283,10 @@ ${reason}
 ${stackTrace || 'N/A'}
 \`\`\`
 
-### Action Sequence
+---
 
-See the uploaded artifact \`bombadil-results\` for the full trace, screenshots, and state transitions.
+Full trace, screenshots and state transitions are available in the \`bombadil-results\` artifact.
 
-You can inspect locally with:
 \`\`\`bash
 npx bombadil inspect bombadil-results
 \`\`\`
