@@ -1,5 +1,5 @@
 import type { FormData } from "../hooks/useFormState";
-import { calculateDiscount, formatPhone } from "../utils/validators";
+import { calculateDiscount, formatPhone, toTitleCase } from "../utils/validators";
 
 interface Step4Props {
   data: FormData;
@@ -46,7 +46,7 @@ export function Step4({ data, onSubmit, onEdit }: Step4Props) {
       <div className="divide-y divide-gray-100">
         <ReviewSection title="Personal" onEdit={() => onEdit(0)}>
           <p>
-            {data.personal.firstName} {data.personal.lastName}
+            {toTitleCase(data.personal.firstName)} {toTitleCase(data.personal.lastName)}
           </p>
           <p>{data.personal.email}</p>
           <p>{formatPhone(data.personal.phone)}</p>
