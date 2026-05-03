@@ -3,13 +3,18 @@ import * as v from 'valibot';
 
 export const triggers = {};
 
-/** Write a file via shell using base64 to avoid escaping issues. */
+/**
+ * Write a file via shell using base64 to avoid escaping issues.
+ * @param {Object} session - The agent session with a shell method.
+ * @param {string} path - The file path to write to.
+ * @param {string} content - The file content to write.
+ */
 async function writeFile(
   session: { shell: (cmd: string) => Promise<{ stdout: string; stderr: string; exitCode: number }> },
   path: string,
   content: string
 ) {
-  const b64 = Buffer.from(content, 'utf-8').toString('base64');
+  const b64 = btoa(content);
   const { exitCode, stderr } = await session.shell(`printf "%s" "${b64}" | base64 -d > ${path}`);
   if (exitCode !== 0) {
     throw new Error(`Failed to write ${path}: ${stderr}`);
