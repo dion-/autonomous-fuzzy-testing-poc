@@ -128,16 +128,11 @@ The comment should communicate:
 - What fix you applied
 - That lint, typecheck, and tests all pass
 
-Write the comment to `flue-comment.md` using Node (to avoid escaping issues):
+Write the comment to `flue-comment.md` using the **`write` tool**. Do **not** use
+`node -e` or any shell command that embeds the markdown — backticks and
+parentheses in the comment will break shell parsing.
 
-```bash
-node -e '
-const fs = require("fs");
-fs.writeFileSync("flue-comment.md", `## Your crafted comment here...`);
-'
-```
-
-If `prNumber` and `repo` are available, post the comment directly to the PR:
+After the file is written, post it to the PR:
 
 ```bash
 gh pr comment <prNumber> --repo <repo> --body-file flue-comment.md
