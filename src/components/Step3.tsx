@@ -83,6 +83,13 @@ export function Step3({ data, onChange }: Step3Props) {
             placeholder="Enter code"
             className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
           />
+          <button
+            type="button"
+            onClick={() => onChange("promoCode", "")}
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Clear
+          </button>
         </div>
         {discount > 0 && (
           <p role="status" className="text-xs text-green-600 font-medium">

@@ -116,4 +116,25 @@ describe("Step3", () => {
     expect(counter).toBeInTheDocument();
     expect(counter).toHaveClass("text-red-500");
   });
+
+  it("renders a clear button that resets the promo code", () => {
+    const onChange = vi.fn();
+    render(
+      <Step3
+        data={{
+          newsletter: false,
+          giftWrap: false,
+          deliveryInstructions: "",
+          promoCode: "SAVE10",
+        }}
+        onChange={onChange}
+      />,
+    );
+
+    const clearBtn = screen.getByRole("button", { name: /clear/i });
+    expect(clearBtn).toBeInTheDocument();
+
+    fireEvent.click(clearBtn);
+    expect(onChange).toHaveBeenLastCalledWith("promoCode", "");
+  });
 });
