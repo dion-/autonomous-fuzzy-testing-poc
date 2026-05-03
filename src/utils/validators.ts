@@ -39,3 +39,8 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+export function formatPromoLabel(code: string): string {
+  const match = code.match(/[A-Za-z0-9]+/g)!;
+  return match.join("-").toUpperCase();
+}

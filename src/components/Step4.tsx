@@ -1,5 +1,5 @@
 import type { FormData } from "../hooks/useFormState";
-import { calculateDiscount, formatPhone } from "../utils/validators";
+import { calculateDiscount, formatPhone, formatPromoLabel } from "../utils/validators";
 
 interface Step4Props {
   data: FormData;
@@ -66,7 +66,7 @@ export function Step4({ data, onSubmit, onEdit }: Step4Props) {
           {data.preferences.deliveryInstructions && (
             <p>Instructions: {data.preferences.deliveryInstructions}</p>
           )}
-          {data.preferences.promoCode && <p>Promo: {data.preferences.promoCode}</p>}
+          {data.preferences.promoCode && <p>Promo: {formatPromoLabel(data.preferences.promoCode)}</p>}
         </ReviewSection>
 
         <div className="py-4">
