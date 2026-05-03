@@ -1,5 +1,5 @@
 import type { FormData } from "../hooks/useFormState";
-import { calculateDiscount } from "../utils/validators";
+import { calculateDiscount, promoCodeStrength } from "../utils/validators";
 
 interface Step3Props {
   data: FormData["preferences"];
@@ -81,6 +81,9 @@ export function Step3({ data, onChange }: Step3Props) {
           <p role="status" className="text-xs text-green-600 font-medium">
             {Math.round(discount * 100)}% discount applied
           </p>
+        )}
+        {data.promoCode && (
+          <p className="text-xs text-gray-500 mt-1">{promoCodeStrength(data.promoCode)}</p>
         )}
       </div>
     </fieldset>
