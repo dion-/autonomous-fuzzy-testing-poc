@@ -25,3 +25,10 @@ dist-ssr
 bombadil-results
 .env.agent-ci
 coverage
+
+# Playwright / UAT artifacts
+test-results
+playwright-report
+e2e/*.spec.ts
+flue-comment.md
+flue-result.json

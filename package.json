@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:bombadil": "pnpm run build && pnpm exec vite preview --port 4173 --host & npx wait-on http://localhost:4173 && bombadil test http://localhost:4173 --no-sandbox --exit-on-violation --time-limit 10m --output-path ./bombadil-results",
+    "test:playwright": "playwright test",
     "ci:local": "npx @redwoodjs/agent-ci run --all --var BOMBADIL_TIME_LIMIT=2m"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
     "@antithesishq/bombadil": "^0.4.5",
     "@flue/cli": "^0.3.5",
     "@flue/sdk": "^0.3.5",
+    "@playwright/test": "^1.59.1",
     "@redwoodjs/agent-ci": "^0.15.0",
     "@tailwindcss/vite": "^4.2.4",
     "@testing-library/jest-dom": "^6.9.1",

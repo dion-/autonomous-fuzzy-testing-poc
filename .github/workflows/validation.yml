@@ -152,3 +152,63 @@ jobs:
         run: |
           npx flue run analyze-violation --target node --id ci-bombadil-$GITHUB_RUN_ID
         shell: bash
+
+  uat:
+    name: UAT — Playwright
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build app
+        run: pnpm run build
+
+      - name: Start preview server
+        run: |
+          pnpm exec vite preview --port 4173 --host &
+          npx wait-on http://localhost:4173
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Fetch main for diff
+        run: |
+          git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          git fetch origin main --depth=1
+
+      - name: Run Flue UAT Agent
+        id: flue-uat
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          npx flue run uat --target node --id ci-uat-$GITHUB_RUN_ID
+        shell: bash
+
+      - name: Upload UAT artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: uat-results
+          path: |
+            test-results/
+            playwright-report/
+            flue-comment.md
+            flue-result.json

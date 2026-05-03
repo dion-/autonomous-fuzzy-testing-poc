@@ -27,7 +27,8 @@
   ],
   "env": {
     "browser": true,
-    "es2024": true
+    "es2024": true,
+    "node": true
   },
   "settings": {
     "react": {
