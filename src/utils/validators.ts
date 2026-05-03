@@ -39,3 +39,14 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+const countryFullNames: Record<string, string> = {
+  US: "United States of America",
+  CA: "Canada",
+  UK: "United Kingdom",
+  DE: "Germany",
+};
+
+export function getCountryFullName(code: string): string {
+  return countryFullNames[code]!.toUpperCase();
+}

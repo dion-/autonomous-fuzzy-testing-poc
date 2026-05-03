@@ -1,5 +1,5 @@
 import type { FormData } from "../hooks/useFormState";
-import { isNonEmpty, isValidPostalCode } from "../utils/validators";
+import { getCountryFullName, isNonEmpty, isValidPostalCode } from "../utils/validators";
 
 interface Step2Props {
   data: FormData["shipping"];
@@ -108,6 +108,9 @@ export function Step2({ data, onChange }: Step2Props) {
             </svg>
           </span>
         </div>
+        {data.country && (
+          <p className="text-xs text-gray-500 mt-1">{getCountryFullName(data.country)}</p>
+        )}
       </div>
 
       <InputRow
