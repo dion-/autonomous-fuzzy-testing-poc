@@ -251,15 +251,26 @@ jobs:
             process.exit(0);
           }
 
-          // Create a draft release to host the media files
+          // Create or fetch a draft release to host the media files
           const tag = `uat-media-pr-${process.env.PR_NUMBER}-${process.env.RUN_ID}`;
+          let release;
           try {
+            const existing = execSync(
+              `gh api repos/${process.env.REPO}/releases/tags/${tag}`,
+              { encoding: "utf8", env: process.env }
+            );
+            release = JSON.parse(existing);
+            console.log("Using existing release:", tag);
+          } catch {
             execSync(
               `gh release create "${tag}" --draft --title "UAT Media PR #${process.env.PR_NUMBER}" --notes "Screenshots and videos from UAT run."`,
-              { stdio: "ignore", env: process.env }
+              { stdio: "inherit", env: process.env }
             );
-          } catch {
-            // Tag may already exist; continue
+            const created = execSync(
+              `gh api repos/${process.env.REPO}/releases/tags/${tag}`,
+              { encoding: "utf8", env: process.env }
+            );
+            release = JSON.parse(created);
           }
 
           // Upload each file as a release asset
@@ -267,19 +278,19 @@ jobs:
             try {
               execSync(
                 `gh release upload "${tag}" "${file}" --clobber`,
-                { stdio: "ignore", env: process.env }
+                { stdio: "inherit", env: process.env }
               );
             } catch (err) {
               console.error("Failed to upload", file, err.message);
             }
           }
 
-          // Fetch release assets to get public URLs
-          const releaseJson = execSync(
+          // Refresh release assets to get public URLs
+          const refreshedJson = execSync(
             `gh api repos/${process.env.REPO}/releases/tags/${tag}`,
             { encoding: "utf8", env: process.env }
           );
-          const release = JSON.parse(releaseJson);
+          release = JSON.parse(refreshedJson);
           const assetMap = new Map();
           for (const asset of release.assets || []) {
             assetMap.set(asset.name, asset.browser_download_url);
