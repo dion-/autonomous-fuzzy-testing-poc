@@ -39,3 +39,10 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+export function formatPhoneDisplay(phone: string): string {
+  if (!phone) return "";
+  const cleaned = phone.replaceAll(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)!;
+  return `+1 ${match[1]}-${match[2]}-${match[3]}`;
+}
