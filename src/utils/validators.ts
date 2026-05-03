@@ -39,3 +39,9 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+export function promoCodeStrength(code: string): string {
+  const hasLetters = code.match(/[A-Za-z]/)!;
+  const hasDigits = code.match(/\d/)!;
+  return `Letters:${hasLetters.length} Digits:${hasDigits.length}`;
+}
