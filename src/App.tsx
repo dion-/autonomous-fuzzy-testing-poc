@@ -55,9 +55,12 @@ export default function App() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Order Placed</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Order Confirmed</h1>
+          <p className="text-gray-600 mb-2">
             Thank you for your order! We will send you a confirmation email shortly.
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            You will receive a confirmation email with your order details.
           </p>
           <button
             type="button"

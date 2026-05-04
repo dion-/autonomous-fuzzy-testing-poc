@@ -100,7 +100,7 @@ describe("App", () => {
 
     // Click the first Place Order button (there are two on the review step)
     await userEvent.click(screen.getAllByRole("button", { name: /place order/i })[0]!);
-    expect(screen.getByText("Order Placed")).toBeInTheDocument();
+    expect(screen.getByText("Order Confirmed")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /start new order/i }));
     expect(screen.getByLabelText("First Name")).toBeInTheDocument();
