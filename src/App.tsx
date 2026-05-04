@@ -9,10 +9,20 @@ import { Modal } from "./components/Modal";
 import { Summary } from "./components/Summary";
 import { clampStep, getCanProceed, getNextStep, getPrevStep, TOTAL_STEPS } from "./utils/checkout";
 
+function generateOrderId() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let id = "ORD-";
+  for (let i = 0; i < 6; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
 export default function App() {
   const [step, setStep] = useState(0);
   const [termsOpen, setTermsOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [orderId, setOrderId] = useState("");
   const { formData, updatePersonal, updateShipping, updatePreferences, clearDraft } =
     useFormState();
 
@@ -31,6 +41,7 @@ export default function App() {
   }
 
   function handleSubmit() {
+    setOrderId(generateOrderId());
     setSubmitted(true);
     clearDraft();
   }
@@ -38,6 +49,7 @@ export default function App() {
   function handleEdit(editStep: number) {
     setStep(editStep);
     setSubmitted(false);
+    setOrderId("");
   }
 
   if (submitted) {
@@ -55,15 +67,22 @@ export default function App() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Order Placed</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Order Confirmed</h1>
+          <p className="text-gray-600 mb-2">
             Thank you for your order! We will send you a confirmation email shortly.
           </p>
+          <div className="mb-6 p-3 rounded-lg bg-gray-50 border border-gray-100">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Confirmation Number</p>
+            <p className="text-lg font-mono font-semibold text-gray-900" data-testid="order-id">
+              {orderId}
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => {
               setSubmitted(false);
               setStep(0);
+              setOrderId("");
             }}
             className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
           >
