@@ -63,6 +63,7 @@ export function Step4({ data, onSubmit, onEdit }: Step4Props) {
         <ReviewSection title="Preferences" onEdit={() => onEdit(2)}>
           <p>Newsletter: {data.preferences.newsletter ? "Yes" : "No"}</p>
           <p>Gift wrap: {data.preferences.giftWrap ? "Yes" : "No"}</p>
+          {data.preferences.giftMessage && <p>Message: {data.preferences.giftMessage}</p>}
           {data.preferences.deliveryInstructions && (
             <p>Instructions: {data.preferences.deliveryInstructions}</p>
           )}

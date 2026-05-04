@@ -8,7 +8,7 @@ describe("Step3", () => {
     const onChange = vi.fn();
     render(
       <Step3
-        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" }}
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
         onChange={onChange}
       />,
     );
@@ -24,7 +24,7 @@ describe("Step3", () => {
     const onChange = vi.fn();
     render(
       <Step3
-        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" }}
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
         onChange={onChange}
       />,
     );
@@ -39,7 +39,7 @@ describe("Step3", () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <Step3
-        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" }}
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
         onChange={onChange}
       />,
     );
@@ -51,7 +51,7 @@ describe("Step3", () => {
 
     rerender(
       <Step3
-        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "SAVE10" }}
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "SAVE10", giftMessage: "" }}
         onChange={onChange}
       />,
     );
@@ -62,7 +62,7 @@ describe("Step3", () => {
     const onChange = vi.fn();
     render(
       <Step3
-        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" }}
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
         onChange={onChange}
       />,
     );
@@ -74,7 +74,7 @@ describe("Step3", () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <Step3
-        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" }}
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
         onChange={onChange}
       />,
     );
@@ -91,6 +91,7 @@ describe("Step3", () => {
           giftWrap: false,
           deliveryInstructions: "Ring bell",
           promoCode: "",
+          giftMessage: "",
         }}
         onChange={onChange}
       />,
@@ -107,6 +108,7 @@ describe("Step3", () => {
           giftWrap: false,
           deliveryInstructions: "a".repeat(200),
           promoCode: "",
+          giftMessage: "",
         }}
         onChange={onChange}
       />,
@@ -126,6 +128,7 @@ describe("Step3", () => {
           giftWrap: false,
           deliveryInstructions: "",
           promoCode: "SAVE10",
+          giftMessage: "",
         }}
         onChange={onChange}
       />,
@@ -136,5 +139,29 @@ describe("Step3", () => {
 
     fireEvent.click(clearBtn);
     expect(onChange).toHaveBeenLastCalledWith("promoCode", "");
+  });
+
+  it("shows gift message textarea when gift wrap is selected", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <Step3
+        data={{ newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Gift Message")).not.toBeInTheDocument();
+
+    rerender(
+      <Step3
+        data={{ newsletter: false, giftWrap: true, deliveryInstructions: "", promoCode: "", giftMessage: "" }}
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByLabelText("Gift Message")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Gift Message"), { target: { value: "Happy birthday!" } });
+    expect(onChange).toHaveBeenLastCalledWith("giftMessage", "Happy birthday!");
   });
 });

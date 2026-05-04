@@ -47,6 +47,29 @@ export function Step3({ data, onChange }: Step3Props) {
             <span className="block text-xs text-gray-500">Beautiful wrapping for $5.00.</span>
           </div>
         </label>
+
+        {data.giftWrap && (
+          <div className="space-y-1.5 pl-8">
+            <label htmlFor="giftMessage" className="block text-sm font-medium text-gray-700">
+              Gift Message
+            </label>
+            <textarea
+              id="giftMessage"
+              rows={3}
+              maxLength={150}
+              value={data.giftMessage}
+              onChange={(e) => onChange("giftMessage", e.target.value)}
+              placeholder="Write a personal message for the recipient..."
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-gray-400 focus:ring-2 focus:ring-gray-100 resize-y"
+            />
+            <p
+              aria-live="polite"
+              className={`text-xs ${data.giftMessage.length >= 150 ? "text-red-500" : "text-gray-500"}`}
+            >
+              {data.giftMessage.length} / 150 characters
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-1.5">
