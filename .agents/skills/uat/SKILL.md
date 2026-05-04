@@ -126,16 +126,18 @@ Format:
 
 [Short summary of the PR change, 2–3 sentences max]
 
-### Tested Flow
-- [Short, concise bullet points of the testing process]
-- [Each bullet should describe one meaningful step or assertion]
+### Test Steps & Screenshots
+In a table, layout each test step in a row. 
+| Step | Pass | Screenshot |
+|------|-----------|------------|
+| [Short Description of the test step]    | [✔️ or ❌] [Reason for pass or failure  ]    | Screenshot 1 |
+| [Short Description of the test step]    | [✔️ or ❌] [Reason for pass or failure]    | Screenshot 2 |
+| [Short Description of the test step]    | [✔️ or ❌] [Reason for pass or failure]    | Screenshot 3 |
 
-### Screenshots
-[For each screenshot captured during the test run, write:]
-- **[Descriptive title of what is being tested]** — [Outcome: what the screenshot shows, e.g. "Passed: the Clear button is visible next to the promo code input."]
+Keep the descriptions very concise. Use an economy of words to get the point across.
 
-Videos, traces, and full screenshots are available in the workflow artifacts.
-[View workflow run](${runUrl})
+### Video
+Video of the run
 ```
 
 If the test ultimately failed:
