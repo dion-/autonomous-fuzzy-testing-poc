@@ -32,7 +32,7 @@ export default async function ({ init }: FlueContext) {
 
   const agent = await init({
     sandbox: 'local',
-    model: 'openai/gpt-4.1',
+    model: 'openai/gpt-5.1',
   });
   const session = await agent.session();
 
