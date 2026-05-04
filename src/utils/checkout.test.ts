@@ -4,7 +4,7 @@ import { clampStep, getCanProceed, getNextStep, getPrevStep, TOTAL_STEPS } from 
 
 const baseFormData: FormData = {
   personal: { firstName: "", lastName: "", email: "", phone: "" },
-  shipping: { country: "", address: "", city: "", state: "", postalCode: "" },
+  shipping: { country: "", address: "", city: "", state: "", postalCode: "", shippingMethod: "" },
   preferences: { newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" },
 };
 
@@ -15,7 +15,7 @@ const validPersonal: FormData = {
 
 const validShipping: FormData = {
   ...baseFormData,
-  shipping: { country: "US", address: "123 Main St", city: "SF", state: "CA", postalCode: "12345" },
+  shipping: { country: "US", address: "123 Main St", city: "SF", state: "CA", postalCode: "12345", shippingMethod: "standard" },
 };
 
 describe("TOTAL_STEPS", () => {

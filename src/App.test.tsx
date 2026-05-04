@@ -28,6 +28,7 @@ describe("App", () => {
     await userEvent.type(screen.getByLabelText("City"), "SF");
     await userEvent.type(screen.getByLabelText("State / Province / Region"), "CA");
     await userEvent.type(screen.getByLabelText("Postal Code"), "12345");
+    await userEvent.click(screen.getByRole("radio", { name: /standard shipping/i }));
 
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
     expect(screen.getByRole("checkbox", { name: /subscribe to newsletter/i })).toBeInTheDocument();
@@ -95,6 +96,7 @@ describe("App", () => {
     await userEvent.type(screen.getByLabelText("City"), "SF");
     await userEvent.type(screen.getByLabelText("State / Province / Region"), "CA");
     await userEvent.type(screen.getByLabelText("Postal Code"), "12345");
+    await userEvent.click(screen.getByRole("radio", { name: /standard shipping/i }));
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
 
@@ -119,6 +121,7 @@ describe("App", () => {
     await userEvent.type(screen.getByLabelText("City"), "SF");
     await userEvent.type(screen.getByLabelText("State / Province / Region"), "CA");
     await userEvent.type(screen.getByLabelText("Postal Code"), "12345");
+    await userEvent.click(screen.getByRole("radio", { name: /standard shipping/i }));
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
     await userEvent.click(screen.getByRole("button", { name: /next/i }));
 

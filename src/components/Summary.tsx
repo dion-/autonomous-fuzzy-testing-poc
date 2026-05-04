@@ -11,7 +11,8 @@ export function Summary({ data }: SummaryProps) {
   const discount = calculateDiscount(data.preferences.promoCode);
   const subtotal = 99.99;
   const discountAmount = subtotal * discount;
-  const total = subtotal - discountAmount + (data.preferences.giftWrap ? 5.0 : 0);
+  const shippingCost = data.shipping.shippingMethod === "express" ? 9.99 : 0;
+  const total = subtotal - discountAmount + shippingCost + (data.preferences.giftWrap ? 5.0 : 0);
 
   return (
     <aside
@@ -60,6 +61,12 @@ export function Summary({ data }: SummaryProps) {
               <div className="flex justify-between text-green-600">
                 <span>Discount</span>
                 <span>-${discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+            {shippingCost > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>Shipping</span>
+                <span>${shippingCost.toFixed(2)}</span>
               </div>
             )}
             {data.preferences.giftWrap && (

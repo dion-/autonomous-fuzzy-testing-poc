@@ -7,7 +7,7 @@ describe("Step2", () => {
     const onChange = vi.fn();
     render(
       <Step2
-        data={{ country: "", address: "", city: "", state: "", postalCode: "" }}
+        data={{ country: "", address: "", city: "", state: "", postalCode: "", shippingMethod: "" }}
         onChange={onChange}
       />,
     );
@@ -28,13 +28,16 @@ describe("Step2", () => {
 
     fireEvent.change(screen.getByLabelText("Postal Code"), { target: { value: "12345" } });
     expect(onChange).toHaveBeenLastCalledWith("postalCode", "12345");
+
+    fireEvent.click(screen.getByRole("radio", { name: /standard shipping/i }));
+    expect(onChange).toHaveBeenLastCalledWith("shippingMethod", "standard");
   });
 
   it("validates US postal code", () => {
     const onChange = vi.fn();
     render(
       <Step2
-        data={{ country: "US", address: "123", city: "SF", state: "CA", postalCode: "1234" }}
+        data={{ country: "US", address: "123", city: "SF", state: "CA", postalCode: "1234", shippingMethod: "" }}
         onChange={onChange}
       />,
     );
@@ -46,7 +49,7 @@ describe("Step2", () => {
     const onChange = vi.fn();
     render(
       <Step2
-        data={{ country: "CA", address: "123", city: "SF", state: "CA", postalCode: "12345" }}
+        data={{ country: "CA", address: "123", city: "SF", state: "CA", postalCode: "12345", shippingMethod: "" }}
         onChange={onChange}
       />,
     );
@@ -58,7 +61,7 @@ describe("Step2", () => {
     const onChange = vi.fn();
     render(
       <Step2
-        data={{ country: "UK", address: "123", city: "SF", state: "CA", postalCode: "12345" }}
+        data={{ country: "UK", address: "123", city: "SF", state: "CA", postalCode: "12345", shippingMethod: "" }}
         onChange={onChange}
       />,
     );
@@ -70,7 +73,7 @@ describe("Step2", () => {
     const onChange = vi.fn();
     render(
       <Step2
-        data={{ country: "DE", address: "123", city: "SF", state: "CA", postalCode: "abc" }}
+        data={{ country: "DE", address: "123", city: "SF", state: "CA", postalCode: "abc", shippingMethod: "" }}
         onChange={onChange}
       />,
     );
@@ -81,7 +84,7 @@ describe("Step2", () => {
   it("does not show error messages for empty fields", () => {
     render(
       <Step2
-        data={{ country: "", address: "", city: "", state: "", postalCode: "" }}
+        data={{ country: "", address: "", city: "", state: "", postalCode: "", shippingMethod: "" }}
         onChange={vi.fn()}
       />,
     );

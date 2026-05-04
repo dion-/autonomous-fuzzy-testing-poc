@@ -18,7 +18,8 @@ export function getCanProceed(step: number, formData: FormData): boolean {
         isNonEmpty(formData.shipping.address) &&
         isNonEmpty(formData.shipping.city) &&
         isNonEmpty(formData.shipping.state) &&
-        isValidPostalCode(formData.shipping.postalCode, formData.shipping.country)
+        isValidPostalCode(formData.shipping.postalCode, formData.shipping.country) &&
+        isNonEmpty(formData.shipping.shippingMethod)
       );
     case 2:
       return true;

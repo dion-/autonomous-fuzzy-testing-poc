@@ -13,6 +13,7 @@ export interface FormData {
     city: string;
     state: string;
     postalCode: string;
+    shippingMethod: string;
   };
   preferences: {
     newsletter: boolean;
@@ -37,6 +38,7 @@ const defaultFormData: FormData = {
     city: "",
     state: "",
     postalCode: "",
+    shippingMethod: "",
   },
   preferences: {
     newsletter: false,

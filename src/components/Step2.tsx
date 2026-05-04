@@ -72,6 +72,7 @@ export function Step2({ data, onChange }: Step2Props) {
     city: !isNonEmpty(data.city),
     state: !isNonEmpty(data.state),
     postalCode: !isValidPostalCode(data.postalCode, data.country),
+    shippingMethod: !isNonEmpty(data.shippingMethod),
   };
 
   return (
@@ -146,6 +147,59 @@ export function Step2({ data, onChange }: Step2Props) {
         error={errors.postalCode}
         placeholder="94102"
       />
+
+      <div className="space-y-3">
+        <span className="block text-sm font-medium text-gray-700">Shipping Method</span>
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="shipping-standard"
+            className={`flex items-center justify-between rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+              data.shippingMethod === "standard"
+                ? "border-gray-900 bg-gray-50"
+                : "border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <input
+                id="shipping-standard"
+                type="radio"
+                name="shippingMethod"
+                value="standard"
+                checked={data.shippingMethod === "standard"}
+                onChange={(e) => onChange("shippingMethod", e.target.value)}
+                className="h-4 w-4 text-gray-900 border-gray-300 focus:ring-gray-200"
+              />
+              <span className="text-sm font-medium text-gray-900">Standard Shipping</span>
+            </div>
+            <span className="text-sm text-gray-500">Free</span>
+          </label>
+          <label
+            htmlFor="shipping-express"
+            className={`flex items-center justify-between rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+              data.shippingMethod === "express"
+                ? "border-gray-900 bg-gray-50"
+                : "border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <input
+                id="shipping-express"
+                type="radio"
+                name="shippingMethod"
+                value="express"
+                checked={data.shippingMethod === "express"}
+                onChange={(e) => onChange("shippingMethod", e.target.value)}
+                className="h-4 w-4 text-gray-900 border-gray-300 focus:ring-gray-200"
+              />
+              <span className="text-sm font-medium text-gray-900">Express Shipping</span>
+            </div>
+            <span className="text-sm text-gray-500">$9.99</span>
+          </label>
+        </div>
+        {errors.shippingMethod && (
+          <p className="text-xs text-red-500">Please select a shipping method.</p>
+        )}
+      </div>
     </fieldset>
   );
 }
