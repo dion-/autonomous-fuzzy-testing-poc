@@ -5,7 +5,7 @@ import { clampStep, getCanProceed, getNextStep, getPrevStep, TOTAL_STEPS } from 
 const baseFormData: FormData = {
   personal: { firstName: "", lastName: "", email: "", phone: "" },
   shipping: { country: "", address: "", city: "", state: "", postalCode: "" },
-  preferences: { newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "" },
+  preferences: { newsletter: false, giftWrap: false, deliveryInstructions: "", promoCode: "", giftMessage: "" },
 };
 
 const validPersonal: FormData = {

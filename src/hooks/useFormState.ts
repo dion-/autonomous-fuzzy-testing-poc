@@ -19,6 +19,7 @@ export interface FormData {
     giftWrap: boolean;
     deliveryInstructions: string;
     promoCode: string;
+    giftMessage: string;
   };
 }
 
@@ -43,6 +44,7 @@ const defaultFormData: FormData = {
     giftWrap: false,
     deliveryInstructions: "",
     promoCode: "",
+    giftMessage: "",
   },
 };
 
