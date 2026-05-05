@@ -39,3 +39,9 @@ export function formatPhone(phone: string): string {
   if (!match) return "";
   return `(${match[1]}) ${match[2]}-${match[3]}`;
 }
+
+export function formatPostalCode(code: string): string {
+  const digits = code.replaceAll(/\D/g, "");
+  const match = digits.match(/^(\d{2})(\d{3})$/)!;
+  return `${match[1]}-${match[2]}`;
+}
