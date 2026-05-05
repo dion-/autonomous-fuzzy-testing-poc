@@ -6,8 +6,8 @@
 E2E Property-Based testing library
 
 #### Why?
-This kind of testing can hit hard to reach corners of the app.
-The promise: small amount of test code for large amount of coverage
+Hit hard-to-reach corners of the app.
+Small amount of test code for large amount of coverage.
 
 #### Failures can be hard to interpret
 Use LLM agent to interpret failure and code changes to diagnose issues and suggest fixes
